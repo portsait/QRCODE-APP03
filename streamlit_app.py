@@ -1,59 +1,42 @@
 import streamlit as st
-import qrcode
 from PIL import Image
 from io import BytesIO
 
-# QR코드 생성 함수
-def generate_qr_code(data: str, scale_factor: float = 0.5):
-    # 1. QR코드 생성
-    qr = qrcode.QRCode(
-        version=1,
-        error_correction=qrcode.constants.ERROR_CORRECT_L,
-        box_size=10,
-        border=4,
-    )
-    qr.add_data(data)
-    qr.make(fit=True)
-
-    # 2. QR코드 이미지를 생성
-    qr_image = qr.make_image(fill_color="black", back_color="white").convert("RGB")
-
-    # 3. 이미지 크기 축소
-    original_size = qr_image.size
-    new_size = (int(original_size[0] * scale_factor), int(original_size[1] * scale_factor))
-    qr_image = qr_image.resize(new_size, Image.ANTIALIAS)
-
-    return qr_image
-
 # Streamlit 애플리케이션
 def main():
-    st.title("QR코드 생성기")
-    st.write("텍스트를 입력하고 QR코드를 생성합니다. 이미지는 자동으로 2배로 축소됩니다.")
+    st.title("이미지 축소기")
+    st.write("이미지를 업로드하면 절반 크기로 축소된 이미지를 보여줍니다.")
     
-    # 사용자 입력
-    data = st.text_input("QR코드에 포함할 텍스트 또는 URL:", "https://example.com")
+    # 파일 업로드
+    uploaded_file = st.file_uploader("이미지를 업로드하세요:", type=["jpg", "jpeg", "png", "bmp", "gif"])
     
-    # QR코드 생성 버튼
-    if st.button("QR코드 생성"):
-        if data.strip():
-            # QR코드 생성
-            qr_image = generate_qr_code(data)
+    if uploaded_file is not None:
+        try:
+            # 이미지 열기
+            image = Image.open(uploaded_file)
+            st.image(image, caption="업로드된 이미지", use_column_width=True)
+            st.write("원본 이미지 크기: ", image.size)
             
-            # 이미지 출력
-            st.image(qr_image, caption="2배 축소된 QR코드", use_column_width=False)
+            # 이미지 크기 절반으로 축소
+            new_size = (image.size[0] // 2, image.size[1] // 2)
+            resized_image = image.resize(new_size, Image.ANTIALIAS)
+            
+            # 축소된 이미지 출력
+            st.image(resized_image, caption="절반 크기로 축소된 이미지", use_column_width=True)
+            st.write("축소된 이미지 크기: ", resized_image.size)
             
             # 다운로드 버튼
             buffer = BytesIO()
-            qr_image.save(buffer, format="PNG")
+            resized_image.save(buffer, format="PNG")
             buffer.seek(0)
             st.download_button(
-                label="QR코드 다운로드",
+                label="축소된 이미지 다운로드",
                 data=buffer,
-                file_name="qrcode_scaled.png",
+                file_name="resized_image.png",
                 mime="image/png",
             )
-        else:
-            st.warning("텍스트를 입력하세요.")
+        except Exception as e:
+            st.error(f"이미지를 처리하는 동안 오류가 발생했습니다: {e}")
 
 if __name__ == "__main__":
     main()
