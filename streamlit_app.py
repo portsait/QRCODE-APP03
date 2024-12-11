@@ -19,7 +19,7 @@ def main():
             
             # 이미지 크기 절반으로 축소
             new_size = (image.size[0] // 2, image.size[1] // 2)
-            resized_image = image.resize(new_size, Image.ANTIALIAS)
+            resized_image = image.resize(new_size, Image.Resampling.LANCZOS)
             
             # 축소된 이미지 출력
             st.image(resized_image, caption="절반 크기로 축소된 이미지", use_column_width=True)
